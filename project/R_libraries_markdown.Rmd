@@ -1,0 +1,675 @@
+---
+title: "Praca Domowa 2"
+author: "Jan Poglod"
+date: "5/5/2022"
+output:
+  html_document: default
+  word_document: default
+  pdf_document: default
+---
+# 1. Wprowadzenie
+##### Praca domowa składa się z pięciu zadań. Każde z nich rozwiązuję z wykorzystaniem poniższych czterech bibliotek:  
+- <ins>sqldf</ins>
+<br>
+- <ins>dplyr</ins>
+<br>
+- <ins>data.table</ins>
+<br>
+- <ins>funkcje bazowe R-a</ins>
+
+##### Dzięki temu można przeprowadzić badanie, polegające na sprawdzeniu, która biblioteka będzie najskuteczniejszą i najbardziej wydajną do obliczania wyników zadań. Każde z opracowanych przeze mnie zadań jest podzielone kolejno na:
+<ul>
+  <li>Wprowadzenie do zadania</li>
+  <li>Opis kroków, które posłuży aby wykonać zadanie</li>
+  <li>Tabelka ilustrująca wywołanie zadania (obliczony wynik)</li>
+  <li>4 rozwiązania zadań zrobione w bibliotekach __sqldf, dplyr, data.table  __ oraz za pomocą __funkcji bazowych R-a__ </li>
+  <li>Pokazanie poprawności każdego z rozwiązań oraz, że dają one identyczne wyniki</li>
+  <li>Obliczenie wydajności każdej z funkcji i zademonstrowanie danych w tabelce</li>
+  <li>Zilustrowanie za pomocą tabeli kolumnowej wydajności funkcji</li>
+</ul>
+
+#### Na koniec w podsuwowaniu wyciągnięte są wnioski z wydajności każdej z funkcji i komentarze końcowe. Ostateczny efekt to wyłonienie biblioteki, która w przykładowych zadaniach przetwarzania danych okazała się najbardziej wydajna i zilustrowanie wyników na wykresach. 
+
+# 2. Omówienie zadań
+### Zadanie 1 <br>
+<ins>Krótki opis</ins>
+_Celem tego zadania jest uzyskanie informacji o tagach, których jest więcej niż 1000 i pokazanie kolumn, spełniających te warunki, z ich nazwami oraz liczbą wystąpień._ <br><br>
+<ins>Opis kroków:</ins><br>
+Tagi znajdujemy w ramce danych o nazwie Tags. W wyniku wypisujemy liczbę wystąpień tagów, pod nazwą Count, i nazwę tego tagu. <br> Sortujemy otrzymany wynik tak, żeby liczba 
+Tagów zaczynała się od największej do najmniejszej czyli równej 1000 wystąpień. 
+<br><br> Uzyskany wynik wygląda następująco:
+
+| Count  | Name   |
+|:------:|:------|
+| 9470   |  visas |
+| 5119   | 	 usa  |
+| 4601   |  uk    | 
+| 4460  |air-travel|
+|3503 |customs-and-immigration|
+|3296 | schengen|
+|2058 | transit |
+|1695 |passports |
+|1665 |indian-citizens|
+|1517 |trains|
+|1456 |canada|
+|1340 |luggage|
+|1258 |tickets|
+|1201 |international-travel|
+|1199 |paperwork |
+|1193 | public-transport|
+|1167 |visa-refusals|
+|1139 |germany |
+|1107 |airports|
+|1056 |europe|
+|1046 |legal |
+|1008 |india |
+
+Aby otrzymać powyższy wynik możemy użyć biblioteki sqldf:
+```{r fig.width=5, message=FALSE, warning=TRUE, paged.print=TRUE}
+df_sql_1 <- function(Tags){
+  df1 <- sqldf("SELECT Count, TagName 
+               FROM Tags WHERE Count > 1000 
+               ORDER BY Count DESC") 
+  return(df1)
+}
+```
+
+Możemy zastosować drugie rozwiązanie z funkcjami bazowymi R-a:
+```{r}
+df_base_1 <- function(Tags){
+  x <- Tags[c("TagName", "Count")] # Wybieramy kolumny na których będziemy operować
+  x <- as.data.frame(Tags[x$Count > 1000, c("Count", "TagName")]) # Wybieramy tagi, których jest więcej niż 1000
+  x <- x[order( x$Count, decreasing = TRUE ), ] # układamy zliczenia tagów malejąco
+  rownames(x) <- NULL # usuwamy kolumny indeksów
+  return(x)
+}
+```
+
+Inne rozwiązanie z biblioteką Data.Table:
+```{r}
+df_table_1 <- function(Tags){
+  t <- as.data.table(Tags) # Tworzymy data.table z ramki danych Tags
+  t <- t[ t$Count>1000, ] # Wybieramy tagi, których jest więcej niż 1000
+  t[ ,c("ExcerptPostId","WikiPostId","Id" )] <- NULL # usuwamy niepotrzebne dla nas kolumny
+  t <- t[order(t$Count, decreasing = TRUE), ] # Układamy zliczenia tagów malejąco
+  t <- t[ ,c("Count", "TagName")] # Zamieniamy kolumny miejscami by mieć taki sam wynik
+  rownames(t) <- NULL # usuwamy kolumnę indeksów
+  t$Count <- as.integer(t$Count) # zmieniamy dane w kolumnie zliczeń tagów na liczbowe wartości
+  return(t)
+}
+```
+
+Rozwiązanie z biblioteką dplyr:
+```{r}
+df_dplyr_1 <- function(Tags){
+  d <- Tags %>% filter(Count > 1000) # filtrujemy tagi i wybieramy te, których jest więcej niż 1000
+  d <- d %>% select(c("TagName","Count")) # Wybieramy kolumny TagName i Count
+  d <- d %>% arrange(desc(Count)) # ustawiamy malejąco liczbę zliczeń
+  return(d)
+}
+```
+
+W wyniku działania każdej z powyższych funkcji otrzymamy ten sam wynik, co możemy sprawdzić przy użyciu funkcji: 
+```{r}
+check <- function(sqldf,base,table,dplyr){
+  dplyr::all_equal( sqldf, base, table ) 
+  dplyr::all_equal( sqldf, base, dplyr ) 
+  dplyr::all_equal( table, base, dplyr ) 
+}
+#Zwracane są trzy wartości TRUE
+```
+
+Pozostało nam jeszcze sprawdzić, która z funkcji jest najszybsza.<br> 
+
+| Funkcja  |  Średnia, jednostka nanosekundy |
+|:------:|:------|
+| sqldf   | 12.05  |
+| base   | 	5.35   |
+| table   |  3.27  | 
+| dplyr  | 4.54 |
+
+Uzyskane wyniki najlepiej zobrazować na tabeli kolumnowej, z której widzimy, <br> że najbardziej wydajną funkcją w tym przypadku jest funkcja z biblioteką table. <br>
+```{r echo=FALSE, fig.height=4, fig.width=4}
+library("ggplot2")
+microb <- data.frame(functions = c("sqldf","base","table","dplyr"), srednia = c(12.05,5.35,3.27,4.54))
+p<-ggplot(data=microb, aes(x=functions, y=srednia)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  theme_minimal()
+p
+```
+
+
+### Zadanie 2 <br>
+<ins>Krótki opis</ins>
+_Celem tego zadania jest uzyskanie informacji o lokalizacjach użytkówników oraz zliczeniu ich._
+<br><br><ins>Opis kroków:</ins><br>
+W tym zadaniu bierzemy pod uwagę użytkowników, którzą są zapisani pod numerem Id w dokumentach Posts i Tags. <br> Wyznaczamy ich po numerze Id, a za pomocą tego właśnie numeru wiemy w jakiej znajduje się on lokalizacji. 
+Następnie zliczamy liczbę wystąpień danych lokalizacji jako kolumnę Count. Ostatecznie modyfikujemy kolumnę Count tak, żeby była malejąco, od największej, i wypisujemy pierwsze 10 wyników. <br><br>
+Uzyskany wynik wygląda następująco:
+
+| Location | Count |
+|:--------|:------:|
+|Christchurch New Zealand |	2765 |
+|NewYork,NY |	1788 |
+|London,United Kingdom |	1708|
+|UK |	1590|
+|Sunshine Coast QLD, Australia |	1550|
+|Australia |	1183|
+|Vancouver, Canada |	967|
+|Netherlands |	935|
+|on the server farm |	924|
+|Pennsylvania |	921|
+
+Aby otrzymać powyższy wynik możemy użyć biblioteki sqldf:
+```{r}
+df_sql_2 <- function(Users,Posts){
+  df1 <- sqldf("SELECT Location, COUNT(*) AS Count
+  FROM (
+  SELECT Posts.OwnerUserId, Users.Id, Users.Location
+  FROM Users
+  JOIN Posts ON Users.Id = Posts.OwnerUserId
+  )
+  WHERE Location NOT IN ('')
+  GROUP BY Location
+  ORDER BY Count DESC
+  LIMIT 10")
+  View(df1)
+  return(df1)
+}
+```
+
+Rozwiązanie z funkcjami bazowymi:
+```{r}
+df_base_2 <- function(Users,Posts){
+  u <- Users[c("Id", "Location")] # Wybieramy potrzebne kolumny
+  u <- u[u$Location != "", ] # eliminujemy puste lokalizacje
+  p <- Posts["OwnerUserId"] # wybieramy potrzebną kolumnę z Posts
+  colnames(p) <- "Id" # Zmieniamy nazwę kolumny na "Id"
+  merge <- merge(u,p,"Id") # Łączymy ramki wedle Id użytkownika
+  agg <- aggregate(merge[1], merge["Location"], length) # Grupujemy dane po lokalizacjach
+  x <- agg[order( agg$Id, decreasing = TRUE ), ] # Ustawiamy malejąco po Id
+  x <- head(x,10) # Wybieramy tylko 10 pierwszych wierszy
+  rownames(x) <- NULL # Usuwamy kolumnę indeksów 
+  colnames(x) <- c("Location", "Count") # Zmieniamy nazwy kolumn na końcowe
+  return(x)
+}
+```
+
+Rozwiązanie z biblioteką Data.Table:
+```{r}
+df_table_2 <- function(Users, Posts){
+  u <- as.data.table(Users[c("Id","Location")]) # Wybieramy potrzebne kolumny
+  u <- u[ u$Location!="", ] # Eliminujemy puste lokalizacje
+  p <- as.data.table(Posts["OwnerUserId"]) # Wybieramy potrzebną kolumnę z Posts
+  setnames(p, 'Id') # Zmieniamy nazwę kolumny na Id
+  merge <- merge(u,p, by="Id") # Łączymy ramki wedle Id użytkownika
+  table <- merge[, .(Count = .N), by = Location] # Tworzymy kolumnę Count, w której zliczamy wystąpienia lokalizacji
+  table <- head(table[order(table$Count, decreasing = TRUE), ],10) # Ustawiamy malejąco, wybieramy 10 pierwszych wierszy
+  return(table)
+}
+```
+
+Rozwiązanie z biblioteką dplyr:
+```{r}
+df_dplyr_2 <- function(Users, Posts){
+  users <- Users %>% select(c("Id","Location")) # Wybieramy potrzebne kolumny z ramki Users
+  posts <- Posts %>% select("OwnerUserId") # Wybieramy kolejną potrzebną kolumnę z ramki Posts
+  users <- users %>% filter(Location != "") # Eliminujemy lokalizacje bez nazw
+  colnames(posts) <- "Id" # Zmieniamy nazwę kolumny na Id
+  merge <- users %>% inner_join(posts, by="Id") # Łączymy dane ramki wedle Id użytkownika
+  df <- merge %>% group_by(Location) %>% summarise(Count=n()) # Grupujemy i zliczamy lokalizacje pod nazwą Count
+  df <- df %>% arrange(desc(Count)) # Ustawiamy malejąco
+  df <- head(df,10) # Bierzemy 10 pierwszych wyników
+  return(df)
+}
+```
+
+W wyniku działania każdej z powyższych funkcji otrzymamy ten sam wynik, co możemy sprawdzić przy użyciu funkcji: 
+```{r}
+check <- function(sqldf,base,table,dplyr){
+  dplyr::all_equal( sqldf, base, table ) 
+  dplyr::all_equal( sqldf, base, dplyr ) 
+  dplyr::all_equal( table, base, dplyr ) 
+}
+#Zwracane są trzy wartości TRUE
+```
+
+Sprawdzmimy, która z funkcji jest najszybsza.<br>
+
+| Funkcja  | Średnia, jednostka nanosekundy  |
+|:------:|:------|
+| sqldf   | 5.42  |
+| base   | 	10.81   |
+| table   |  2.44  | 
+| dplyr  | 4.93 |
+<br>
+
+Uzyskane wyniki najlepiej zobrazować na tabeli kolumnowej, z której widzimy, <br> że najbardziej wydajną funkcją w tym przypadku jest funkcja z biblioteką table. <br>
+```{r echo=FALSE, fig.height=4, fig.width=4}
+library("ggplot2")
+microb <- data.frame(functions = c("sqldf","base","table","dplyr"), srednia = c(5.42,10.81,2.44,4.93))
+p<-ggplot(data=microb, aes(x=functions, y=srednia)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  theme_minimal()
+p
+```
+
+
+## Zadanie 3 <br>
+<ins>Krótki opis:</ins>
+_Zadanie to polega na policzeniu lat, w których rejestrowane były bagaże klasy 1. Każdy rok osobno grupujemy i liczymy ile razy był w nim rejestrowany bagaż._ <br><br>
+<ins>Opis kroków:</ins><br>
+Potrzebne informacje wybieramy z dokumentu Badges. Zaczynamy od zmiany daty, która zapisana jest w postaci pełnej tzn. rok-miesiąc-dzień-godzina tak abyśmy mieli tylko rok. Przekształcamy nasze dane tak, aby występowały w nich tylko bagaże klasy 1. Następnoe każdy rok osobno grupujemy i zliczamy go pod nazwą kolumny TotalNumber. Ostateczny wynik ustawiamy tak, aby był od najmniejszej ilości wystąpień do największej. 
+<br><br> Uzyskany wynik wygląda następująco:
+
+| Year | TotalNumber |
+|:--------|:------:|
+| 2011 |	16 |
+| 2012 |	23 |
+| 2013 |	66|
+| 2021 |  153|
+| 2014 |	197|
+| 2020 |	265|
+| 2015 |	328|
+| 2016 |	509|
+| 2017 |	522|
+| 2018 |	697|
+| 2019 |	718|
+
+Rozwiązanie przy użyciu sql:
+```{r warning=FALSE}
+df_sql_3 <- function(Badges){
+  df1 <- sqldf("SELECT Year, SUM(Number) AS TotalNumber
+  FROM (
+  SELECT
+  Name,
+  COUNT(*) AS Number,
+  STRFTIME('%Y', Badges.Date) AS Year
+  FROM Badges
+  WHERE Class = 1
+  GROUP BY Name, Year
+  )
+  GROUP BY Year
+  ORDER BY TotalNumber")
+  return(df1)
+}
+```
+
+Rozwiązanie z funkcjami bazowymi:
+```{r}
+df_base_3 <- function(Badges){
+  # Wybieramy dane tylko z pierwszymi klasami i wybieramy z nich kolumny Date i Name
+  badges <- as.data.frame( na.omit( Badges[ Badges$Class == "1", c("Date", "Name") ],  drop=FALSE) )  
+  date <- format( as.Date( badges[,1] ),"%Y" ) # Zmieniamy datę, aby zlczać tylko rok
+  badges$Date <- date # Zmieniamy datę na zapis lat
+  colnames(badges) <- c("Year","Name") # Nazwywamy kolumny jako Year i Name
+  res <- aggregate(badges, badges[c("Year")], length) # Grupujemy po kolejnych latach i zliczamy ich wystąpienia
+  res$Name <- NULL # Usuwamy kolumnę Name, bo nie będzie nam potrzebna
+  colnames(res) <- c("Year","TotalNumber") # Nazwywamy kolumny wynikowej ramki jako Year i TotalNumber
+  res <- res[order( res$TotalNumber, decreasing = FALSE ), ] # Ustawiamy malejąco od największej ilości zliczeń
+  return(res)
+}
+```
+
+Rozwiązanie z biblioteką Data.Table:
+```{r}
+df_table_3 <- function(Badges){
+  table <- as.data.table(Badges[c("Date","Name","Class")]) # Wybieramy potrzebne dane do naszej data.table
+  table <- table[table$Class=="1"] # Wybieramy dane tylko z klasą pierszą
+  table[, Class:=NULL] # Usuwamy kolumn klas, której już nie potrzebujemy
+  date <- table$Date # Tworzymy listę, aby zmienić format daty
+  year <- as.data.table( year( date ) ) # Korzystam z funkcji data.table year(),aby wybrać tylko rok z całej dat
+  setnames( year, "Year" ) # Nazywam kolumnę Year w ramce year
+  setnames(table, c( "Year","Name" ) ) # Nazwywam kolumny jako Year i Name w ramce table
+  table[ ,1] <- lapply(year, as.character, stringsAsFactors=FALSE) # Zmieniam zapis lat z liczbowego na character
+  df <- table[, .(Count = .N), by = Year] # Zliczam liczbę wystąpień każdego roku pod kolumną Count
+  df <- (df[order(df$Count, decreasing = FALSE), ]) # Ustawiam malejąco liczbę wystąpień lat
+  setnames( df, c("Year","TotalNumber") ) # Nazywam kolumny jako Year i TotalNumber
+  return(df)
+}
+```
+
+Rozwiązanie z biblioteką dplyr:
+```{r}
+df_dplyr_3 <- function(Badges){
+  badges <- Badges %>% filter(Class == "1") # Wybieramy dane tylko z pierwszą klasę
+  badges <- badges %>% select(Name,Date) # Wybieramy potrzbne nam dane z kolumn Name i Date
+  date <- badges %>% select(Date) # Tworzymy wartość date do modyfikowania daty
+  year <- format(as.Date(date[ ,1]), "%Y") # Zmieniamy date aby został tylko rok
+  matrix_year <- year %>% as_tibble() # Tworzymy ramkę danych z naszych zmodyfikowanych dat
+  badges$Date <- matrix_year # Zamieniamy zmodyfikowane daty zamiast starych
+  df <- badges %>% group_by(Date) %>% # Grupujemy lata po kolejnych
+  summarise(TotalNumber=n()) # Zliczamy wystąpienia każdego jako kolumna Count
+  colnames(df) <- c("Year","TotalNumber") # Zmieniamy nazwy kolumn na Year i TotalNumber
+  df <- df %>% arrange(TotalNumber) # Ustawiamy otrzymaną ramkę malejąco po liczbie wystąpień
+  return(df)
+}
+```
+
+W wyniku działania każdej z powyższych funkcji otrzymamy ten sam wynik, co możemy sprawdzić przy użyciu funkcji: 
+```{r}
+check <- function(sqldf,base,table,dplyr){
+  dplyr::all_equal( sqldf, base, table ) 
+  dplyr::all_equal( sqldf, base, dplyr ) 
+  dplyr::all_equal( table, base, dplyr ) 
+}
+#Zwracane są trzy wartości TRUE
+```
+
+Sprawdzimy, która z funkcji jest najszybsza.<br> 
+
+| Funkcja  | Średnia, jednostka nanosekundy  |
+|:------:|:------|
+| sqldf   | 5.36  |
+| base   | 	6.88   |
+| table   |  4.95  | 
+| dplyr  |  7.06  |
+
+<br>
+Uzyskane wyniki najlepiej zobrazować na tabeli kolumnowej, z której widzimy, <br> że najbardziej wydajną funkcją w tym przypadku jest także funkcja z biblioteką table. <br>
+```{r echo=FALSE, fig.height=4, fig.width=4}
+library("ggplot2")
+microb <- data.frame(functions = c("sqldf","base","table","dplyr"), srednia = c(5.36,6.88,4.95,7.06))
+p<-ggplot(data=microb, aes(x=functions, y=srednia)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  theme_minimal()
+p
+```
+
+
+## Zadanie 4 <br>
+<ins>Krótki opis</ins>
+_Celem tego zadania jest otrzymanie kolumn z Id użytkownika, jego nazwą i lokalizacją oraz zliczenie ParentId pod nazwą kolumny AverageAnswersCount. Zliczamy dane tylko tam gdzie PostTypeId użytkownika jest równe 2._ <br><br>
+<ins>Opis kroków:</ins><br>
+Wybieramy potrzebne dane z plików Users i Posts (kolejno: AccountId, DisplayName, Location, ParentId, OwnerUserId, Id, PostTypeId). Zaczynamy od wybrania tylko tych danych, w których PostTypeId użytkownika jest równe 2. Następnie grupujemy dane wedle ParentId użytkownika i zliczamy liczbę ich wystąpień pod nazwą _AnswersCount_. Łączymy otrzymany wynik z ramką danych Posts, tam, gdzie Id w tej ramce jest równe ParentId w naszym wyniku. Podobnie postępujemyn dla pliku Users, ale porównujemy poprzednie Id użytkowników z OwnerUserId w ramce danych Users i łaczymy dopasowania. Teraz otrzymaliśmy już użytkowników, którzy nas interesują w naszym badaniu, więc wybieramy ich lokalizacje i nazwy. Grupujemy wynik wedle OwnerUserId użytkowników i liczymy średnią arytmetyczną otrzymanych wcześniej, zliczonych _AnswersCount_, wedle tych grup. Ustawiamy otrzymane dane malejąco, od największej otrzymanej średniej arytmetycznej.
+<br><br>
+Uzyskany wynik wygląda następująco:
+
+|AccountId |DisplayName |Location | AverageAnswersCount |
+|:--------|:------|:---|:---|
+|280  |csmba  |San Francisco,CA | 11 |
+| 40811 | vocaro | San Jose, CA | 11 |
+|204  |	Josh|Australia |10 | 
+| 44093 |Emma Arbogast  |Salem, OR | 10|
+|11758  |rvarcher	|Oklahoma City, OK | 9|
+|19588  |JD Isaacks	|Atlanta, GA | 8|
+|20473  |Jeremy Boyd	|Houston, TX | 8|
+|42364  |Petrogad	| | 8|
+|54571  |Christian	| | 8|
+|79346  |Thomas Matthews	|California | 8|
+
+Zapytanie sql:
+```{r warning=FALSE}
+df_sql_4 <- function(Users,Posts){
+  df <- sqldf("SELECT
+  Users.AccountId,
+  Users.DisplayName,
+  Users.Location,
+  AVG(PostAuth.AnswersCount) as AverageAnswersCount
+  FROM
+  (
+  SELECT
+  AnsCount.AnswersCount,
+  Posts.Id,
+  Posts.OwnerUserId
+  FROM (
+  SELECT Posts.ParentId, COUNT(*) AS AnswersCount
+  FROM Posts
+  WHERE Posts.PostTypeId = 2
+  GROUP BY Posts.ParentId
+  ) AS AnsCount
+  JOIN Posts ON Posts.Id = AnsCount.ParentId
+  ) AS PostAuth
+  JOIN Users ON Users.AccountId=PostAuth.OwnerUserId
+  GROUP BY OwnerUserId
+  ORDER BY AverageAnswersCount DESC, AccountId ASC
+  LIMIT 10")
+  return(df)
+}
+```
+
+Rozwiązanie z funkcjami bazowymi:
+```{r}
+df_base_4 <- function(Users,Posts){
+  p <- Posts[ ( is.na(Posts$PostTypeId)==FALSE & Posts$PostTypeId==2 ), ] # Wybieramy dane gdzie PosTypeId użytkownika jest równe 2
+  posts <- p["ParentId"] # Wybieramy kolumnę z ParentId użytkownika
+  Id <- Posts[c("Id","OwnerUserId")] # Wybieramy kolumny Id i OwnerUserId i zapisujemy jako ramkę Id
+  user <- Users[c("AccountId","Location","DisplayName")] # Wybieramy potrzebne kolumny z pliku Users
+  colnames(user) <- c("OwnerUserId","Location","DisplayName") # Nazywamy kolumny
+  AnsCount <- aggregate(posts, posts["ParentId"], length) # Grupujemy ramkę danych po ParentId i zliczamy
+  colnames(AnsCount) <- c("Id","TotalNumber") # Nazywamy kolumny
+  PostAuth <- merge(Id,AnsCount,by="Id") # Łączymy ramki danych Id i pogrupowanych zliczonych ParentId
+  merge <- merge(user,PostAuth,by="OwnerUserId") # Łączymy wyniki z linijki wyżej z potrzebnymi kolumnami z pliku Users po OwnerUserId
+  df <- merge[is.na(merge$OwnerUserId) == FALSE,] # Usuwamy puste numery OwnerUserId
+  df["Id"] <- NULL # Usuwamy kolumnę Id
+  average <- df[c("OwnerUserId","TotalNumber")] # Tworzymy zmienną do liczenia średniej arytmetycznej
+  average <- average[order( average$OwnerUserId ), ] # Ustawiamy malejąco po OwnerUserId
+  mean <- as.data.frame(aggregate(average["TotalNumber"], average["OwnerUserId"], mean)) # Grupujemy dane po OwnerUserId i liczymy średnią z TotalNumber
+  df <- merge(df, mean, by="OwnerUserId") # Łączymy nasze wyniki po OwnerUserId
+  df <- df[ c( "OwnerUserId","DisplayName","Location","TotalNumber.y" ) ] # wybieramy potrzebne wyniki do ostatecznej ramki
+  colnames(df) <- c("AccountId","DisplayName","Location","AverageAnswersCount")
+  res <- head( df[ order( df$AverageAnswersCount,decreasing = TRUE ), ], 10 ) # Ustawiamy malejąco po obliczonej średniej arytmetycznej i wybieramy 10 pierwszych wyników
+  rownames(res) <- NULL # Usuwamy kolumny indeksów
+  return(res)
+}
+```
+
+Rozwiązanie z biblioteką Data.Table:
+```{r}
+df_table_4 <- function(Users, Posts){
+  pt <- as.data.table(Posts) # Tworzymy data.table z pliku Posts
+  Id <- as.data.table(Posts[c("Id","OwnerUserId")]) # Tworzymy data.table z potrzebnych nam kolumn z pliku Posts
+  user <- as.data.table(Users[c("AccountId","Location","DisplayName")]) # Tworzymy data.table z potrzebnych nam kolumn z pliku Users 
+  posts <- pt[ pt$PostTypeId==2, ] # Wybieramy dane gdzie PosTypeId użytkownika jest równe 2
+  setnames(user, c("OwnerUserId","Location","DisplayName") ) # Zmieniamy nazwy kolumn
+  AnsCount <- posts[, .(Count = .N), by = ParentId] # Zliczamy wystąpienia ParentId jako Count
+  setnames(AnsCount, c("Id","TotalNumber")) # Zmieniamy nazwy
+  PostAuth <- merge( Id, AnsCount, by="Id" ) # Łączymy uzyskane ramki danych po Id użytkownika
+  merge <- merge( user, PostAuth, by="OwnerUserId" ) # Łączymy uzyskane ramki danych po OwnerUserId użytkownika
+  df <- merge[ is.na( merge$OwnerUserId ) == FALSE, ] # Usuwamy dane gdzie nie istnieją OwnerUserId
+  df[ , Id:=NULL ] # Usuwamy kolumnę Id
+  df[ ,1] <- lapply( df[ ,1], as.character, stringsAsFactors=FALSE ) # Modyfikujemy zliczenia, aby zapisać je jako character (napis)
+  average <- df # Tworzymy zmienną do liczenia średniej arytmetycznej
+  average <- average[, Location:=NULL] # Usuwamy niepotrzebną kolumnę lokalizacje
+  average <- average[, DisplayName:=NULL] # Usuwamy niepotrzebną kolumnę nazw
+  average <- average[order( average$OwnerUserId ), ] # Ustawiamy OwnerUserId od największych do najmniejszych
+  mean <- average[ , (mean=mean(TotalNumber) ), by = OwnerUserId] # Grupujemy dane po OwnerUserId Zliczamy średnią arytmetyczną z ParentId
+  table <- merge[is.na(merge$OwnerUserId) == FALSE, ] # Usuwamy dane, które nie isntieją z OwnerUserId
+  table[ ,1] <- lapply(table[ ,1], as.character, stringsAsFactors=FALSE) # Modyfikujemy zliczenia, aby zapisać je jako character (napis)
+  res <- merge(table, mean, by="OwnerUserId") # Łączymy dane po OwnerUserId
+  res <- res[order(-res$V1),] # Ustawiamy zliczoną średnią arytmetyczną malejąco
+  res[, Id:=NULL] # Usuwamy kolumnę Id
+  res[, TotalNumber:=NULL] # Usuwamy kolumnę TotalNumber
+  setnames(res, c("AccountId","DisplayName","Location","AverageAnswersCount")) # Zmieniamy nazwy kolumn
+  res <- head( res,10 ) # Wybieramy tylko 10 pierwszych wierszy
+  res[ ,c("Location", "DisplayName") := .(DisplayName, Location)] # Zamieniamy miejscami kolumny z lokalizacjami i nazwami
+  res$AccountId <- as.integer(res$AccountId) # Zmieniamy kolumnę AccountId na liczbowe wartości
+  rownames(res) <- NULL # Usuwamy kolumnę z indeksami
+  return(res)
+}
+```
+
+Rozwiązanie z biblioteką dplyr:
+```{r}
+df_dplyr_4 <- function(Users, Posts){
+  p <- Posts %>% filter(PostTypeId==2) # Wybieramy dane gdzie PosTypeId użytkownika jest równe 2
+  posts <- p %>% select(ParentId) # Wybierammy kolumnę ParentId
+  Id <- Posts %>% select(Id,OwnerUserId) # Wybieramy kolumny Id i OwnerUserId i nazywamy jako Id
+  user <- Users %>% select(AccountId,Location,DisplayName) # Wybieramy potrzebne kolumny z pliku Users
+  colnames(user) <- c("OwnerUserId","Location","DisplayName") # Zmieniamy nazwy
+  AnsCount <- posts %>% group_by(ParentId) %>% summarise(TotalNumber=n()) # Grupujemy wynik po ParentId i zliczamy liczbę wystąpień jako TotalNumber
+  colnames(AnsCount) <- c("Id","TotalNumber") # Zmieniamy nazwy kolumn
+  PostAuth <- Id %>% inner_join(AnsCount, by="Id") # Łączymy wyniki po Id użytkownika
+  merge <- user %>% inner_join(PostAuth, by="OwnerUserId") # Łączymy wyniki z linijki wyżej i users po OwnerUserId
+  merge <- merge[is.na(merge$OwnerUserId) == FALSE,] # Usuwamy nieistniejące OwnerUserId
+  average <- merge %>% select(OwnerUserId,TotalNumber) %>% as_tibble() # Tworzymy zmienną do wyznaczania średniej
+  average <- average %>% arrange(OwnerUserId) # Sortujemy dane po OwnerUserId
+  mean <- average %>% group_by(OwnerUserId) %>% summarise(n = n(),TotalNumber = mean(TotalNumber, na.rm = TRUE)) # Grupujemy OwnerUserId, zliczamy wystąpeinia wyniku jako TotalNumber i liczymy średnią arytmetyczną
+  df <- merge %>% inner_join(mean, by="OwnerUserId") # Łączymy otrzymane dane po OwnerUserId
+  df <- df %>% select(OwnerUserId,DisplayName,Location,TotalNumber.y) # Wybieramy potrzebne kolumny
+  colnames(df) <- c("AccountId","DisplayName","Location","AverageAnswersCount") #Zmieniamy nazwy
+  df <- df %>% arrange(desc(AverageAnswersCount),AccountId) #Sortujemy malejąco po naszej średniej
+  df <- head( df, 10 ) # Wyświetlamy 10 pierwszych wierszy
+  rownames(df) <- NULL
+  return(df)
+}
+```
+
+Sprawdzimy, która z funkcji jest najszybsza.<br> 
+
+| Funkcja  | Średnia, jednostka nanosekundy  |
+|:------:|:------:|
+| sqldf   | 6.18  |
+| base   | 	6.20   |
+| table   |  4.12  | 
+| dplyr  |  6.60  |
+
+<br>
+
+Uzyskane wyniki najlepiej zobrazować na tabeli kolumnowej, z której widzimy, <br> że najbardziej wydajną funkcją w tym przypadku jest funkcja z biblioteką table. <br>
+```{r echo=FALSE, fig.height=4, fig.width=4}
+library("ggplot2")
+microb <- data.frame(functions = c("sqldf","base","table","dplyr"), srednia = c(6.18,6.20,4.12,6.60))
+p<-ggplot(data=microb, aes(x=functions, y=srednia)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  theme_minimal()
+p
+```
+
+
+## _Zadanie 5_
+<ins>Krótki opis:</ins>
+_Zadanie to polega na przedstawieniu pytań, na które było oddane najwięcej głosów. Następnie pokazujemy Id użytkownika, który zadał pytanie i datę zamieszczena tego pytania._ <br><br>
+<ins>Opis kroków:</ins><br>
+Potrzebne dla nas informacje wybieramy z ramek danych Votes i Posts. Zaczynamy od zmiany dat na wersję dzień-rok-miesiąc. Omijamy pytania, gdzie jest pusta nazwa, dzielimy dane wedle kolumny VoteDate, na nowe i stare, wszystko sumujemy jako Total oraz wybieramy tylko te dane, gdzie VoteTypeId użytkownika jest równe 1, 2 lub 5. Grupujemy wyniki po PostId i VoteDate. Ostatecznie wybieramy nazwę zapytania użytkownika, jego Id i datę oraz sortujemy te dane po największej wartości Total, której kolumny nazwę zmieniamy na Votes. Wypijumy tylko 10 pierwszych wyników, gdzie padła największa liczba głosów. 
+
+Wynik otrzymanej ramki danych wygląda następująco:
+
+|Title |	Id|	Date|	Votes|
+|:--------|:------|:----|:-----|
+|What's the longest distance that can be traveled by only using free transportation?|151994| 09.01.2020|	140|
+|Considerations for very fragile and expensive (> $100,000) items in carry-on luggage|	157138|	10.05.2020|	108|
+|What are these chair-like things in hotels?|	153605|	10.02.2020|	94|
+|What to do if I overstayed my e-visa for Saint Petersburg/Leningrad Oblast |	152418|	18.01.2020|	84|
+|What are the hidden fees of a cruise?|	152178|	13.01.2020|	80|
+|What happens when a town is under quarantine and my visa expires| 152677|	23.01.2020|	76|
+|I've been warned to leave the US within 10 days as I will "overstay" my visa, but I have legally left the country by plane months ago. What can I do?|	156945|	28.04.2020|	72|
+|When an individual enters the United States, can they have an attorney present when going through the U.S. Customs and Border Protection?|	159298|	06.09.2020|	68|
+|Is Seiryu Miharashi Station the only train station where passengers cannot enter or exit the platform?|	162386 | 04.02.2021|	64|
+|Positive drug test in Singapore: How long do I need to avoid the country? |	163264 |	08.04.2021 |	64|
+
+Zapytanie sql:
+```{r warning=FALSE}
+df_sql_5 <- function(Votes,Posts){
+  df <- sqldf("SELECT Posts.Title, Posts.Id,
+  STRFTIME('%Y-%m-%d', Posts.CreationDate) AS Date,
+  VotesByAge.Votes
+  FROM Posts
+  JOIN (
+  SELECT
+  PostId,
+  MAX(CASE WHEN VoteDate = 'new' THEN Total ELSE 0 END) NewVotes,
+  MAX(CASE WHEN VoteDate = 'old' THEN Total ELSE 0 END) OldVotes,
+  SUM(Total) AS Votes
+  FROM (
+  SELECT
+  PostId,
+  CASE STRFTIME('%Y', CreationDate)
+  WHEN '2021' THEN 'new'
+  WHEN '2020' THEN 'new'
+  ELSE 'old'
+  END VoteDate,
+  COUNT(*) AS Total
+  FROM Votes
+  WHERE VoteTypeId IN (1, 2, 5)
+  GROUP BY PostId, VoteDate
+  ) AS VotesDates
+  GROUP BY VotesDates.PostId
+  HAVING NewVotes > OldVotes
+  ) AS VotesByAge ON Posts.Id = VotesByAge.PostId
+  WHERE Title NOT IN ('')
+  ORDER BY Votes DESC
+  LIMIT 10")
+  return(df)
+}
+```
+
+Otrzymaliśmy następujące informacje o wydajności podanej funkcji:
+
+| Funkcja  | Średnia, jednostka nanosekundy  |
+|:------:|:------|
+| sqldf   | 9.93  |
+
+# 3. Podsumowanie
+#### <br><ins>Otrzymując wyniki z wszystkich powyższych zadań możemy przeanalizować która z używanych bibliotek programistycznych jest najbardziej wydajna. </ins><br>
+Otrzymane, interesujące do naszego badania informacje, możemy pozyskać z wykresów, które były skutkiem zliczenia średniego czasu wykonywania naszych funkcji. Dane prezentują się następująco: <br>
+
+```{r Wykresy podsumowujące, echo=FALSE, fig.height=2, fig.width=2}
+library("ggplot2") 
+microb <- data.frame(Zadanie_1 = c("sqldf","base","table","dplyr"), srednia = c(12.05,5.35,3.27,4.54))
+p<-ggplot(data=microb, aes(x=Zadanie_1, y=srednia)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  theme_minimal()
+microb2 <- data.frame(Zadanie_2 = c("sqldf","base","table","dplyr"), srednia = c(5.42,10.81,2.44,4.93))
+p2<-ggplot(data=microb2, aes(x=Zadanie_2, y=srednia)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  theme_minimal()
+microb3 <- data.frame(Zadanie_3 = c("sqldf","base","table","dplyr"), srednia = c(5.36,6.88,4.95,7.06))
+p3<-ggplot(data=microb3, aes(x=Zadanie_3, y=srednia)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  theme_minimal()
+microb4 <- data.frame(Zadanie_4 = c("sqldf","base","table","dplyr"), srednia = c(6.18,6.20,4.12,6.60))
+p4<-ggplot(data=microb4, aes(x=Zadanie_4, y=srednia)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  theme_minimal()
+p
+p2
+p3
+p4
+```
+
+#### Policzmy średnią aytmetyczną, grupując po bibliotekach, ze wszystkich powyższych wykresów tak, aby otrzymać średni wynik, dla naszych przykładowych zadań. <br> Wykres otrzymany w taki sposób prezentuję się następująco:
+
+```{r Wykres główny podsumowujący, echo=FALSE, fig.height=3, fig.width=3}
+library("ggplot2") 
+microb5 <- data.frame(Biblioteka = c("sqldf","base","table","dplyr"), srednia = c(7.25,7.31,3.695,5.78))
+g<-ggplot(data=microb5, aes(x=Biblioteka, y=srednia)) +
+  geom_bar(stat="identity", fill="orange")+
+  theme_minimal()
+g
+```
+
+__1. Analiza Wykresu ze średnią arytmetyczną wyników z wszystkich zadań__
+<br>
+Powyższy wykres jasno ilustruje, że dla przykładowych 4 zadań dotyczących przetwarzania danych najbardziej wydajną biblioteką jest biblioteka <ins>data.table</ins>. Podobnie szybko z zadaniami radzi sobie biblioteka <ins>dplyr</ins>. Biblioteka <ins>sqldf</ins> oraz funkcje bazowe R-a (<ins>base</ins>) w tym zestawieniu wychodzą bardzo podobnie tzn. ich wydajność bardzo się od siebie nie różni i są najwolniejsze z wszystkich badanych. <br> 
+
+__2. Analiza Wykresów z wynikami z każdego zadania osobno__
+
+#### Omówienie biblioteki sqldf
+Analizując wykresy z każdego zadania osobno można dojść do wniosku, że funkcja z wykorzystaniem biblioteki <ins>sqldf</ins> wychodzą najgorzej ze wszystkich, w zadaniach krótkich, w których piszemy mało kodu. Zaś pozostałe funkcje w takich zadaniach liczą wynik bardzo podobnie i nie ma sporych różnic. Biblioteka <ins>sqldf</ins> ma jednak dobrą wydajność w zadaniach z większą ilością kodu, a posługiwanie się nią jest przyjemne i proste.
+
+#### Omówienie biblioteki dplyr
+Biblioteka <ins>dplyr</ins> słabo liczy wyniki w zadaniach, które są długie i wymagają dużo kodu, ale porównywalnie z innymi i nie ma wiele opóźnienia. Najszybciej liczy zaś zadania krótkie i prezentuje się wtedy najlepiej po data.table. 
+
+#### Omówienie funkcji bazowych R-a
+Funkcja bazowa R-a (<ins>base</ins>) najgorzej pośród innych badancych bibliotek poradziła sobie w zadaniu 2, w którym nie było dużo kodu do napisania i sporych wyników do liczenia. Biblioteki dplyr i data.table wychodzą w takich zadaniach znacznie lepiej, dlatego wykorzystując je mamy wydajniejszy kod.
+W tym zestawieniu <ins>base</ins> porównywalnie do biblioteki dplyr obliczyło zadania z większą ilością kodu i nie wychodzi w takich zadaniach najgorzej.
+
+#### Omówienie biblioteki data.table
+Na każdym z analizowanych wykresów funkcje z biblioteką <ins>data.table</ins> miały najszybszy czas obliczania wyników, zatem oczywistym wnioskiem z przeprowadzonego badania jest, że jest to najbardziej wydajna biblioteka spośród pozostałych oraz jeżeli chcemy, aby nas program był szybki najlepiej jest z niej korzystać. 
+<br>
+
+### __Wykres kołowy prezentujący średni czas działania funkcji z badanych bibliotek:__
+```{r echo=FALSE}
+library("ggplot2") 
+circle <- data.frame(Biblioteka = c("sqldf","base","table","dplyr"), srednia = c(7.25,7.31,3.695,5.78))
+ggplot(circle, aes(x="", y=srednia, fill=Biblioteka)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=100)
+```
+<br>
+<br>
+
+
+
+
