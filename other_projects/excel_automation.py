@@ -137,9 +137,6 @@ def main():
         project = wb.create_sheet("Sheet1")
         project.title = f"{nazwy[i]}"
 
-    pr = openpyxl.load_workbook("edor.xlsx")
-    source = wb.active
-    target = wb.copy_worksheet(source)
 
     print(wb[f"{nazwy[0]}"])
     print(pr["Sheet1"])
