@@ -1,6 +1,6 @@
 ---
 title: "Rowerem po Nowym Yorku"
-author: "Jan Poglod, Maciej Janta Lipiński"
+author: "Jan Poglod"
 date: "5/29/2022"
 output:
   ioslides_presentation: default
