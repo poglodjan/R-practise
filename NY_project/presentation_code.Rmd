@@ -1,0 +1,378 @@
+---
+title: "Rowerem po Nowym Yorku"
+author: "Jan Poglod, Maciej Janta Lipiński"
+date: "5/29/2022"
+output:
+  ioslides_presentation: default
+  slidy_presentation: default
+  beamer_presentation: default
+---
+
+# <br> Wprowadzenie
+<div style="background-color:orange;color:white; text-align:center;border-radius:40px ;vertical-align: top; padding:40px 0;">
+<span style="color:white">
+_Co mieliśmy za zadanie zrobić?_ <br>
+Mieliśmy na podstawie ramek danych przechowujących dane wypożyczeń rowerów z nowego Yorku wymyśleć i opracować dwa nietrywialne zapytania. 
+</span>
+</div>
+
+## Pytanie 1
+<div style="background-color:grey; text-align:center;border-radius:40px ;vertical-align: top; padding:40px 0;">
+<span style="color:white">
+_"Jak dni tygodnia wpływają na ruch rowerowy?"_
+</span>
+</div><br><br>
+<div style="text-align:center">
+![](/Users/janpoglod/Documents/R/pr2/img/calendar.jpeg){width=30%, height=30%}
+</div>
+
+## Wykres 1
+<div style="background-color:powderblue; text-align:center;border-radius:40px ;vertical-align: top; padding:40px 0;">
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE,fig.height=3.5}
+library(dplyr)
+library(ggplot2)
+data <- tribble( ~dzien,  ~liczba_wypozyczen, ~Type,
+        "Pon", 562570,  "Subscriber",
+        "Pon",  59761, "customer",
+        "Wt", 611408,  "Subscriber",
+        "Wt",  54951, "customer",
+        "Sr", 534708,  "Subscriber",
+        "Sr",  56589, "customer",
+        "Czw", 474283,  "Subscriber",
+        "Czw",  47866, "customer",
+        "Pt", 454405,  "Subscriber",
+        "Pt",  55632, "customer",
+        "So", 318018,  "Subscriber",
+        "So", 101069, "customer",
+        "Nd", 359610,  "Subscriber",
+        "Nd", 101412, "customer")
+
+Dni_tygodnia <- factor(data$dzien, level = c('Pon', 'Wt', 'Sr', "Czw", "Pt", "So", "Nd"))
+ggplot(data, aes(x= Dni_tygodnia, y=liczba_wypozyczen, fill= Type)) +   geom_col()
+```
+</div>
+
+## Marzec
+<div style="background-color:powderblue; text-align:center;border-radius:40px ;vertical-align: top; padding:40px 0;">
+<p style="color:black;">Porównanie liczby wypożyczeń do dni tygodnia</p>
+```{r echo=FALSE,fig.height=3.5}
+mar <- c(146193, 138173, 86981, 136620, 111363, 104584, 93432)
+barplot(names.arg = c("Pon", "Wt", "Sr", "Czw", "Pt", "So", "Nd" ), mar, col = rainbow(7), xlab = "dzien tygodnia", ylab = "liczba wypozyczen"  )
+```
+</div>
+
+## Lipiec
+<div style="background-color:powderblue; text-align:center;border-radius:40px ;vertical-align: top; padding:40px 0;">
+<p style="color:black">Porównanie liczby wypożyczeń do dni tygodnia</p>
+```{r echo=FALSE,fig.height=3.5}
+lip <- c(222361, 223616, 209761, 252364, 215093, 175359, 153999)
+barplot(names.arg = c("Pon", "Wt", "Sr", "Czw", "Pt", "So", "Nd" ), lip, col = rainbow(7), xlab = "dzien tygodnia", ylab = "liczba wypozyczen"  )
+
+```
+</div>
+
+## Październik
+<div style="background-color:powderblue; text-align:center;border-radius:40px ;vertical-align: top; padding:40px 0;">
+<p style="color:black">Porównanie liczby wypożyczeń do dni tygodnia</p>
+```{r echo=FALSE,fig.height=3.5}
+paz <- c(223698, 258622, 262275, 221919, 239312, 142659, 158771)
+barplot(names.arg = c("Pon", "Wt", "Sr", "Czw", "Pt", "So", "Nd" ), paz, col = rainbow(7), xlab = "dzien tygodnia", ylab = "liczba wypozyczen"  )
+
+```
+</div>
+
+## Subskrybenci
+<div style="background-color:black; text-align:center;border-radius:40px ;vertical-align: top; padding:40px 0px;">
+```{r echo=FALSE, fig.width=8.5}
+tmp_sub <- c(45098, 14888, 29784, 247097, 507923, 280549, 335883, 360240, 558027, 536992, 264811, 133710)
+barplot(names.arg = c("0-2", "2-4", "4-6", "6-8", "8-10", "10-12", "12-14", "14-16", "16-18", "18-20", "20-22", "22-24" ), tmp_sub, col=rainbow(2), xlab = "dwugodzinne przedzialy", ylab = "ilosc wypozyczen")
+```
+</div>
+
+## Wypożyczenia na krótki okres
+<div style="background-color:black; text-align:center;border-radius:40px ;vertical-align: top; padding:40px 0px;">
+```{r echo=FALSE, fig.width=8.5}
+tmp_cust <- c(7772,  2775,  1729,  7535, 26850, 56887, 80929, 89731, 88083, 61748, 33864, 19377)
+barplot(names.arg = c("0-2", "2-4", "4-6", "6-8", "8-10", "10-12", "12-14", "14-16", "16-18", "18-20", "20-22", "22-24" ), tmp_cust, col=rainbow(2), xlab = "dwugodzinne przedzialy", ylab = "ilosc wypozyczen")
+
+```
+</div>
+
+# Podsumowanie
+<div style="background-color:orange;color:white; text-align:center;border-radius:40px ;vertical-align: top; padding:40px 0;font-size:20px">
+- Ludzie częściej wypożyczają rowery w dni robocze niż w weekend
+- Wśród subskrybentów najpopularniejszymi godzinami wypożyczeń są godzinny 8-10 oraz 16-20 popołudniu, co może świadczyć o tym, że korzystjący z rowerów to w głownej mierze osoby dojeżdżające do pracy lub do szkoły i na uczelnie
+- Wśród osób wypożyczających na krótki okres (1-3 dni) dominują przede wszystkim godziny popołudniowe, z czego możemy wywnioskować, że są to w głównej mierze turyści
+</div>
+
+## <br> Pytanie 2
+<div style="background-color:grey; text-align:center;border-radius:40px ;vertical-align: top; padding:40px 0;">
+<span style="color:white">
+_"Wpływ pór roku na ruch rowerowy na mieście i jak dzięki temu możemy przewidzieć popularne trasy na przyszłość?"_
+</span>
+</div>
+
+## Najpopularniejsze trasy wśród użytkowników do 25 lat:
+<div style="background-color:orange;border-radius:40px;text-align:center; padding:40px 0;">
+![Young](/Users/janpoglod/Documents/R/pr2/img/young_c.jpeg){width=50%, height=50%}</div>
+
+## Osoby poniżej 25 roku życia
+<div style="background-color:powderblue;color:brown; text-align:center;border-radius:40px ;vertical-align: top; padding:40px 0;">Luty<br><br>
+![Luty](/Users/janpoglod/Documents/R/pr2/img/m_luty.jpg){width=50%, height=50%}
+```{r Wykres5, echo=FALSE, fig.height=3, fig.width=3}
+library("ggplot2") 
+microb2 <- data.frame(Trasy = c("Pl Tech","t2","t3","t4","t5"), Uczęszczalność = c(126,122,121,105,102))
+g<-ggplot(data=microb2, aes(x=Trasy, y=Uczęszczalność)) +
+  geom_bar(stat="identity", fill="grey")+
+  theme_minimal()
+g
+```
+</div>
+
+## Osoby poniżej 25 roku życia
+<div style="background-color:powderblue;color:brown; text-align:center;border-radius:40px ;vertical-align: top; padding:40px 0;">Maj<br><br>
+![Maj](/Users/janpoglod/Documents/R/pr2/img/m_maj.jpg){width=50%, height=50%}
+```{r Wykres6, echo=FALSE, fig.height=3, fig.width=3}
+library("ggplot2") 
+microb2 <- data.frame(Trasy = c("Pl Tech","t2","t3","t4","t5"), Uczęszczalność = c(124,101,82,81,77))
+g<-ggplot(data=microb2, aes(x=Trasy, y=Uczęszczalność)) +
+  geom_bar(stat="identity", fill="green")+
+  theme_minimal()
+g
+```
+</div>
+
+## Osoby poniżej 25 roku życia
+<div style="background-color:powderblue;color:brown; text-align:center;border-radius:40px ;vertical-align: top; padding:40px 0;">Sierpień<br><br>
+![Sierpień](/Users/janpoglod/Documents/R/pr2/img/m_sierpien.jpg){width=50%, height=50%}
+```{r Wykres7, echo=FALSE, fig.height=3, fig.width=3}
+library("ggplot2") 
+microb2 <- data.frame(Trasy = c("Central Park","t2","t3","t4","t5"), Uczęszczalność = c(138,122,102,100,99))
+g<-ggplot(data=microb2, aes(x=Trasy, y=Uczęszczalność)) +
+  geom_bar(stat="identity", fill="orange")+
+  theme_minimal()
+g
+```
+</div>
+
+## Osoby poniżej 25 roku życia
+<div style="background-color:powderblue;color:brown; text-align:center;border-radius:40px ;vertical-align: top; padding:40px 0;">Październik<br><br><br>
+![Październik](/Users/janpoglod/Documents/R/pr2/img/m_pazdziernik.jpg){width=50%, height=50%}
+```{r Wykres8, echo=FALSE, fig.height=3, fig.width=3}
+library("ggplot2") 
+microb2 <- data.frame(Trasy = c("Pl University","t2","t3","t4","t5"), Uczęszczalność = c(271,184,184,172,167))
+g<-ggplot(data=microb2, aes(x=Trasy, y=Uczęszczalność)) +
+  geom_bar(stat="identity", fill="blue")+
+  theme_minimal()
+g
+```
+</div>
+
+## Najpopularniejsze trasy wśród użytkowników 25-60 lat:
+<div style="background-color:orange;border-radius:40px;text-align:center; padding:40px 0;">
+![](/Users/janpoglod/Documents/R/pr2/img/mid_c.jpeg){width=50%, height=50%}
+</div>
+
+## Osoby między 25 a 60 rokiem życia
+<div style="background-color:powderblue;color:brown; text-align:center;border-radius:40px ;vertical-align: top; padding:40px 0;">Luty<br><br>
+![Luty](/Users/janpoglod/Documents/R/pr2/img/p_luty.jpg){width=50%, height=50%}
+```{r Wykres1, echo=FALSE, fig.height=3, fig.width=3}
+library("ggplot2") 
+microb5 <- data.frame(Trasy = c("Cooper Square","t2","t3","t4","t5"), Uczęszczalność = c(435,319,303,288,283))
+g<-ggplot(data=microb5, aes(x=Trasy, y=Uczęszczalność)) +
+  geom_bar(stat="identity", fill="grey")+
+  theme_minimal()
+g
+```
+</div>
+
+## Osoby między 25 a 60 rokiem życia
+<div style="background-color:powderblue;color:brown; text-align:center;border-radius:40px ;vertical-align: top; padding:40px 0;">Maj<br><br>
+![Maj](/Users/janpoglod/Documents/R/pr2/img/p_maj.jpg){width=50%, height=50%}
+```{r Wykres2, echo=FALSE, fig.height=3, fig.width=3}
+library("ggplot2") 
+microb2 <- data.frame(Trasy = c("Central Park","t2","t3","t4","t5"), Uczęszczalność = c(783,766,744,545,513))
+g<-ggplot(data=microb2, aes(x=Trasy, y=Uczęszczalność)) +
+  geom_bar(stat="identity", fill="green")+
+  theme_minimal()
+g
+```
+</div>
+
+## Osoby między 25 a 60 rokiem życia
+<div style="background-color:powderblue;color:brown; text-align:center;border-radius:80px ;vertical-align: top; padding:40px 0;">Sierpień<br><br>
+![Sierpień](/Users/janpoglod/Documents/R/pr2/img/p_sierpien.jpg){width=50%, height=50%}
+```{r Wykres3, echo=FALSE, fig.height=3, fig.width=3}
+library("ggplot2") 
+microb2 <- data.frame(Trasy = c("Picnic Spot","t2","t3","t4","t5"), Uczęszczalność = c(829,822,682,675,656))
+g<-ggplot(data=microb2, aes(x=Trasy, y=Uczęszczalność)) +
+  geom_bar(stat="identity", fill="orange")+
+  theme_minimal()
+g
+```
+</div>
+
+## Osoby między 25 a 60 rokiem życia
+<div style="background-color:powderblue;color:brown; text-align:center;border-radius:40px ;vertical-align: top; padding:40px 0;">Październik<br><br>
+![Październik](/Users/janpoglod/Documents/R/pr2/img/p_pazdziernik.jpg){width=50%, height=50%}
+```{r Wykres4, echo=FALSE, fig.height=3, fig.width=3}
+library("ggplot2") 
+microb2 <- data.frame(Trasy = c("7rh Avenue","t2","t3","t4","t5"), Uczęszczalność = c(678,602,593,516,513))
+g<-ggplot(data=microb2, aes(x=Trasy, y=Uczęszczalność)) +
+  geom_bar(stat="identity", fill="blue")+
+  theme_minimal()
+g
+```
+</div>
+
+
+## Najpopularniejsze trasy wśród użytkowników od 60 roku życia:
+<div style="background-color:orange;border-radius:40px;text-align:center; padding:40px 0;">
+![Young](/Users/janpoglod/Documents/R/pr2/img/old_c.jpeg){width=50%, height=50%}</div>
+
+## Osoby powyżej 60 lat
+<div style="background-color:powderblue;color:brown; text-align:center;border-radius:40px ;vertical-align: top; padding:40px 0;">Luty<br><br>
+![Luty](/Users/janpoglod/Documents/R/pr2/img/e_luty.jpg){width=50%, height=50%}
+```{r Wykres9, echo=FALSE, fig.height=3, fig.width=3}
+library("ggplot2") 
+microb2 <- data.frame(Trasy = c("Columbus Ave","t2","t3","t4","t5"), Uczęszczalność = c(44,35,30,29,12))
+g<-ggplot(data=microb2, aes(x=Trasy, y=Uczęszczalność)) +
+  geom_bar(stat="identity", fill="grey")+
+  theme_minimal()
+g
+```
+</div>
+
+## Osoby powyżej 60 lat
+<div style="background-color:powderblue;color:brown; text-align:center;border-radius:40px ;vertical-align: top; padding:40px 0;">Maj<br><br>
+![Maj](/Users/janpoglod/Documents/R/pr2/img/e_maj.jpg){width=50%, height=50%}
+```{r Wykres10, echo=FALSE, fig.height=3, fig.width=3}
+library("ggplot2") 
+microb2 <- data.frame(Trasy = c("E 30 St","t2","t3","t4","t5"), Uczęszczalność = c(46,37,37,34,33))
+g<-ggplot(data=microb2, aes(x=Trasy, y=Uczęszczalność)) +
+  geom_bar(stat="identity", fill="green")+
+  theme_minimal()
+g
+```
+<div>
+
+## Osoby powyżej 60 lat
+<div style="background-color:powderblue;color:brown; text-align:center;border-radius:40px ;vertical-align: top; padding:40px 0;">Sierpień<br><br>
+![Sierpień](/Users/janpoglod/Documents/R/pr2/img/e_sierpien.jpg){width=50%, height=50%}
+```{r Wykres11, echo=FALSE, fig.height=3, fig.width=3}
+library("ggplot2") 
+microb2 <- data.frame(Trasy = c("Hicks St","t2","t3","t4","t5"), Uczęszczalność = c(41,41,39,34,34))
+g<-ggplot(data=microb2, aes(x=Trasy, y=Uczęszczalność)) +
+  geom_bar(stat="identity", fill="orange")+
+  theme_minimal()
+g
+```
+</div>
+
+## Osoby powyżej 60 lat
+<div style="background-color:powderblue;color:brown; text-align:center;border-radius:40px ;vertical-align: top; padding:40px 0;">Październik<br><br>
+![Październik](/Users/janpoglod/Documents/R/pr2/img/e_pazdziernik.jpg){width=50%, height=50%}
+```{r Wykres12, echo=FALSE, fig.height=3, fig.width=3}
+library("ggplot2") 
+microb2 <- data.frame(Trasy = c("NYCBS","t2","t3","t4","t5"), Uczęszczalność = c(4,1,1,1,1))
+g<-ggplot(data=microb2, aes(x=Trasy, y=Uczęszczalność)) +
+  geom_bar(stat="identity", fill="blue")+
+  theme_minimal()
+g
+```
+</div>
+
+## Liczba użytkowników w zależności od pory roku
+<div style="background-color:black;color:brown; text-align:center;border-radius:40px ;vertical-align: top; padding:40px 0;">
+```{r Wykres_p3, echo=FALSE, fig.height=3, fig.width=2.5}
+microb2 <- data.frame(młodzi = c("02","05","08","10"), Liczba_Użytkowników = c(72250,165076,221249,236400))
+g<-ggplot(data=microb2, aes(x=młodzi, y=Liczba_Użytkowników), levels=c("luty","maj","sierpień","październik")) +
+  geom_bar(stat="identity", fill="black")+
+  theme_minimal()
+g
+
+microb2 <- data.frame(pracujący = c("02","05","08","10"), I = c(711831,1541413,1633545,1528081))
+g<-ggplot(data=microb2, aes(x=pracujący, y=I), levels=c("luty","maj","sierpień","październik")) +
+  geom_bar(stat="identity", fill="black")+
+  theme_minimal()
+g
+
+microb2 <- data.frame(emerytowani = c("02","05","08","10"), I = c(18165,29408,28316,29250))
+g<-ggplot(data=microb2, aes(x=emerytowani, y=I), xlab="emeryci") +
+  geom_bar(stat="identity", fill="black")+
+  theme_minimal()
+g
+
+```
+<div>
+
+## Badanie dystansów
+<div style="background-color:black; text-align:center;border-radius:40px ;vertical-align: top; padding: 20px 0;">
+<p style="color:white"> Stosunek długich tras (od 8km) do wszystkich w zależności od pory roku. Wynik podany w procentach</p><br>
+```{r Wykres_p4, echo=FALSE, fig.height=3, fig.width=2}
+barplot(names.arg=c("") 
+                    ,c(0.2307293,0.5152175,0.3781944), 
+                    col=rainbow(9), 
+                    xlab="Luty")
+
+barplot(names.arg=c("") 
+                    ,c(0.6125874,0.7629955,0.5409352), 
+                    col=rainbow(9), 
+                    xlab="Maj")
+
+barplot(names.arg=c("") 
+                    ,c(0.6858505,0.7269632,0.3554583), 
+                    col=rainbow(9), 
+                    xlab="Sierpień")
+
+barplot(names.arg=c("") 
+                    ,c(0.4831659,0.6166466,0.3272776), 
+                    col=rainbow(9), 
+                    xlab="Październik")
+
+```
+<span style="color:red">młodzi </span>
+<span style="color:orange">pracujący </span>
+<span style="color:green">emeryci</span><br><br>
+<div>
+
+## Badanie dystansów
+<div style="background-color:black; text-align:center;border-radius:40px ;vertical-align: top; padding: 20px 0;">
+<p style="color:white">Stosunek tras typu "ze stacji A do stacji A" do wszystkich w zależności od pory roku. Wynik podany w procentach</p><br>
+```{r Wykres_p5, echo=FALSE, fig.height=3, fig.width=2}
+barplot(names.arg=c("") 
+                    ,c(1.359801,1.358855,1.858555), 
+                    col=rainbow(9), 
+                    xlab="Luty")
+
+barplot(names.arg=c("") 
+                    ,c(2.106992,2.049545,2.406), 
+                    col=rainbow(9), 
+                    xlab="Maj")
+
+barplot(names.arg=c("") 
+                    ,c(2.665975,2.228951,3.219632), 
+                    col=rainbow(9), 
+                    xlab="Sierpień")
+
+barplot(names.arg=c("") 
+                    ,c(1.956718,1.753112,2.31766), 
+                    col=rainbow(9), 
+                    xlab="Październik")
+
+```
+<span style="color:red">młodzi </span>
+<span style="color:orange">pracujący </span>
+<span style="color:green">emeryci</span>
+<div>
+
+# Podsumowanie
+<div style="background-color:orange; color:white; text-align:center;border-radius:40px ;vertical-align: top; padding:40px 0;font-size:16px">
+- Poznaliśmy najpopularniejsze trasy nowojorczyków z podziałem na pory roku. Dzięki temu możemy przewidzieć popularność stacji na przyszłość.
+- Możemy reklamować najpopularniejsze trasy w celu uzyskania większej ilości klientów
+- Osoby poniżej 25 roku życia wypożyczają rowery głównie blisko uniwersytetów
+- Długie trasy są najczęściej jeżdzone przez osoby w wieku 25-60 lat
+- Osoby powyżej 60 roku życia najchętniej jeżdzą "od stacji A do stacji A" <br>
+</div>
+
+# Dziękujemy za uwagę
