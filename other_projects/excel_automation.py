@@ -1,4 +1,4 @@
-# Projekt realizowany dla pewnej firmy, pobierający dane z jiry i zarządzający alokacją pracowników
+# Projekt realizowany dla pewnej firmy, pobierający dane z jiry i zarządzający alokacją pracowników zapisywaną do pliku excel
 
 import pandas as pd
 import subprocess
