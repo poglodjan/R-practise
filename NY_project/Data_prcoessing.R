@@ -1,3 +1,5 @@
+# Analiza wypożyczeń rowerów citibike w Nowym Jorku w okresie 5 lat 
+
 df_lipiec18 <- read.csv("201807-citibike-tripdata.csv")
 df_pazdziernik18 <- read.csv("201810-citibike-tripdata.csv")
 df_marzec18 <- read.csv("201803-citibike-tripdata.csv")
