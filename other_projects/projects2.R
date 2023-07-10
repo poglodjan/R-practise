@@ -1,3 +1,7 @@
+###
+# Projekt realizowany dla pewnej firmy zarządzający pracownikami bodyleasing
+###
+
 test <- read.csv("blkprm.csv", TRUE, fileEncoding = "UTF-8")
 kons <- read.csv("kons.csv", TRUE, fileEncoding = "UTF-8")
 
