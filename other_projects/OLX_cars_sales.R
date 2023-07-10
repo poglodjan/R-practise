@@ -1,3 +1,7 @@
+###
+# Na początek - przykładowe opcje analizy danych w języku R :)
+###
+
 install.packages("PogromcyDanych")
 library(PogromcyDanych)
 library(dplyr)
