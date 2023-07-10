@@ -1,3 +1,5 @@
+# Projekt realizowany dla pewnej firmy, pobierający dane z jiry i zarządzający alokacją pracowników
+
 import pandas as pd
 import subprocess
 from os import listdir
