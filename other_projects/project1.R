@@ -1,3 +1,7 @@
+###
+# Projekt realizowany dla pewnej firmy automatyzujący alokację pracowników
+###
+
 # aktualizacja listy pracowników
 lista <- read.csv("lista_pracowników.csv", TRUE,";" ,fileEncoding = "UTF-8")
 to_new <- read.csv("do_aktual.csv", TRUE,";" ,fileEncoding = "UTF-8")
