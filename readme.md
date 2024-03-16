@@ -7,3 +7,4 @@
 - project - data exploration from airport's dataset holding airport's activity data 
 - other_projects - my corporate projects that I got permission to share
 - shiny_dashboard_application - The first application is for a certain company that creates a PowerPoint presentation from dashboard choices. The second application is a Netflix data exploration dashboard
+- computer statistics - handle the computer statistics methods in R
